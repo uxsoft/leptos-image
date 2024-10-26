@@ -1,6 +1,6 @@
 use crate::optimizer::*;
 
-use leptos::*;
+use leptos::prelude::*;
 use leptos_meta::Link;
 
 /**
@@ -32,14 +32,11 @@ pub fn Image(
     /// Image alt text.
     #[prop(into, optional)]
     alt: String,
-    /// Style class for image.
-    #[prop(into, optional)]
-    class: Option<AttributeValue>,
 ) -> impl IntoView {
     if src.starts_with("http") {
-        logging::debug_warn!("Image component only supports static images.");
+        logging::console_debug_warn("Image component only supports static images.");
         let loading = if lazy { "lazy" } else { "eager" };
-        return view! { <img src=src alt=alt class=class loading=loading/> }.into_view();
+        return view! { <img src=src alt=alt loading=loading/> }.into_any();
     }
 
     let blur_image = {
@@ -69,10 +66,9 @@ pub fn Image(
     // Retrieve value from Cache if it exists. Doing this per-image to allow image introspection.
     let resource = crate::use_image_cache_resource();
 
-    let blur_image = store_value(blur_image);
-    let opt_image = store_value(opt_image);
-    let alt = store_value(alt);
-    let class = store_value(class.map(|c| c.into_attribute_boxed()));
+    let blur_image = StoredValue::new(blur_image);
+    let opt_image = StoredValue::new(opt_image);
+    let alt = StoredValue::new(alt);
 
     view! {
         <Suspense fallback=|| ()>
@@ -89,36 +85,33 @@ pub fn Image(
                                 .find(|(c, _)| blur_image.with_value(|b| b == c))
                                 .map(|c| c.1.clone());
                             let svg = {
-                                if let Some(svg_data) = placeholder_svg {
-                                    SvgImage::InMemory(svg_data)
-                                } else {
-                                    SvgImage::Request(
+                                match placeholder_svg {
+                                    Some(svg_data) => SvgImage::InMemory(svg_data),
+                                    None =>  SvgImage::Request(
                                         blur_image.get_value().get_url_encoded(&handler_path),
                                     )
                                 }
                             };
-                            let class = class.get_value();
                             let alt = alt.get_value();
-                            view! { <CacheImage lazy svg opt_image alt class=class priority/> }
-                                .into_view()
+                            view! { <CacheImage lazy svg opt_image alt priority/> }
+                                .into_any()
                         } else {
                             let loading = if lazy { "lazy" } else { "eager" };
                             view! {
                                 <img
                                     alt=alt.get_value()
-                                    class=class.get_value()
                                     decoding="async"
                                     loading=loading
                                     src=opt_image
                                 />
                             }
-                                .into_view()
+                                .into_any()
                         }
                     })
             }}
 
         </Suspense>
-    }
+    }.into_any()
 }
 
 enum SvgImage {
@@ -131,7 +124,6 @@ fn CacheImage(
     svg: SvgImage,
     #[prop(into)] opt_image: String,
     #[prop(into, optional)] alt: String,
-    class: Option<Attribute>,
     priority: bool,
     lazy: bool,
 ) -> impl IntoView {
@@ -158,14 +150,13 @@ fn CacheImage(
 
     view! {
         {if priority {
-            view! { <Link rel="preload" as_="image" href=opt_image.clone()/> }.into_view()
+            view! { <Link rel="preload" as_="image" href=opt_image.clone()/> }.into_any()
         } else {
-            ().into_view()
+            ().into_any()
         }}
 
         <img
             alt=alt.clone()
-            class=class
             decoding="async"
             loading=loading
             src=opt_image

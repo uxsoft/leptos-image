@@ -12,6 +12,7 @@ pub struct ImageOptimizer {
 
 #[cfg(feature = "ssr")]
 impl ImageOptimizer {
+    
     /// Creates a new ImageOptimizer.
     /// api_handler_path is the path where the image handler is located in the server router.
     /// Parallelism denotes the number of images that can be created at once.
@@ -39,7 +40,7 @@ impl ImageOptimizer {
     /// use axum::*;
     /// use axum::routing::post;
     /// use leptos_axum::{generate_route_list, handle_server_fns, LeptosRoutes};
-    ///
+    /// 
     /// #[cfg(feature = "ssr")]
     /// async fn your_main_function() {
     ///
@@ -73,7 +74,7 @@ impl ImageOptimizer {
     pub fn provide_context(&self) -> impl Fn() + 'static + Clone + Send {
         let optimizer = self.clone();
         move || {
-            leptos::provide_context(optimizer.clone());
+            leptos::prelude::provide_context(optimizer.clone());
         }
     }
 
