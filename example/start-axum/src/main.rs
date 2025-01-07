@@ -3,7 +3,7 @@
 async fn main() {
     use axum::{routing::post, Router};
     use leptos::prelude::*;
-    use leptos_axum::{file_and_error_handler, generate_route_list, handle_server_fns, LeptosRoutes};
+    use leptos_axum::{generate_route_list, handle_server_fns, LeptosRoutes};
     use leptos_image::*;
     use start_axum::app::*;
     use tokio::net::TcpListener;
@@ -34,13 +34,13 @@ async fn main() {
         .image_cache_route(&state)
         // Provide the optimizer to leptos context.
         .leptos_routes_with_context(&state, routes, state.optimizer.provide_context(), App)
-        .fallback(file_and_error_handler(shell))
+        .fallback(leptos_axum::file_and_error_handler(shell))
         .with_state(state);
 
     // run our app with hyper
     // `axum::Server` is a re-export of `hyper::Server`
     let listener = TcpListener::bind(&addr).await.unwrap();
-    // logging::log!("listening on http://{}", &addr);
+    leptos::logging::log!("listening on http://{}", &addr);
     axum::serve(listener, app.into_make_service())
         .await
         .unwrap();

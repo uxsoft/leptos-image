@@ -34,7 +34,7 @@ pub fn Image(
     alt: String,
 ) -> impl IntoView {
     if src.starts_with("http") {
-        logging::console_debug_warn("Image component only supports static images.");
+        leptos::logging::warn!("Image component only supports static images.");
         let loading = if lazy { "lazy" } else { "eager" };
         return view! { <img src=src alt=alt loading=loading/> }.into_any();
     }
